@@ -1,0 +1,2532 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>FocusFlowFlip</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #b8624a;
+        --card-t: #9e5039;
+        --card-b: #cc7258;
+        --sep: rgba(0, 0, 0, 0.22);
+        --line: rgba(255, 255, 255, 0.15);
+        --glass: rgba(0, 0, 0, 0.15);
+        --glass2: rgba(0, 0, 0, 0.25);
+        --txt: #fff;
+        --txt2: rgba(255, 255, 255, 0.48);
+        --sheet: #b8624a;
+      }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: 'Vazirmatn', sans-serif;
+      }
+      .shell {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto auto auto;
+        align-items: center;
+        justify-items: center;
+        padding: max(env(safe-area-inset-top), 10px) max(env(safe-area-inset-right), 16px)
+          max(env(safe-area-inset-bottom), 10px) max(env(safe-area-inset-left), 16px);
+        overflow: hidden;
+        gap: 0;
+      }
+      .topbar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: clamp(4px, 1.2vh, 10px);
+        padding-top: clamp(14px, 2.2vh, 20px);
+        z-index: 2;
+      }
+      .brand {
+        font-size: clamp(10px, 2.5vw, 13px);
+        font-weight: 800;
+        letter-spacing: 3px;
+        opacity: 0.5;
+        text-transform: uppercase;
+      }
+      .topbar-btns {
+        display: flex;
+        gap: 8px;
+      }
+      .icon-btn {
+        width: clamp(32px, 8vw, 40px);
+        height: clamp(32px, 8vw, 40px);
+        border-radius: 50%;
+        border: none;
+        background: var(--glass);
+        color: var(--txt);
+        font-size: clamp(13px, 3.5vw, 17px);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.2s,
+          transform 0.12s;
+      }
+      .icon-btn:active {
+        transform: scale(0.82);
+        background: var(--glass2);
+      }
+      .tabs-status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(4px, 1vh, 8px);
+        width: 50%;
+        padding-bottom: clamp(2px, 0.8vh, 8px);
+        z-index: 3;
+      }
+      .tabs {
+        display: flex;
+        gap: 3px;
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 50px;
+        padding: 3px;
+      }
+      .tab {
+        padding: clamp(5px, 1.2vh, 8px) clamp(16px, 5vw, 28px);
+        border: none;
+        border-radius: 50px;
+        font-family: inherit;
+        font-size: clamp(11px, 2.8vw, 14px);
+        font-weight: 700;
+        cursor: pointer;
+        background: transparent;
+        color: var(--txt2);
+        transition: all 0.22s;
+      }
+      .tab.active {
+        background: rgba(255, 255, 255, 0.22);
+        color: var(--txt);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .sdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.28);
+        transition: background 0.3s;
+        flex-shrink: 0;
+      }
+      .sdot.run {
+        background: #fff;
+        animation: pulse 1.2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
+        }
+      }
+      .slbl {
+        font-size: clamp(10px, 2.5vw, 12px);
+        font-weight: 600;
+        opacity: 0.6;
+      }
+      .clock-area {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .flip-clock {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        direction: ltr;
+        gap: clamp(6px, 2vw, 18px);
+        width: 100%;
+        height: 100%;
+      }
+      .flip-unit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(4px, 0.8vh, 8px);
+        flex-shrink: 0;
+      }
+      .flip-lbl {
+        font-size: clamp(9px, 1.6vh, 13px);
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 0.4;
+      }
+      .flip-card {
+        position: relative;
+        width: clamp(130px, 22vw, 400px);
+        height: clamp(160px, 30vh, 520px);
+        border-radius: clamp(18px, 3vw, 38px);
+        overflow: hidden;
+        flex-shrink: 0;
+        min-height: 0;
+        cursor: text;
+        transition: box-shadow 0.2s;
+      }
+      .flip-card.state-empty {
+        box-shadow:
+          0 8px 28px rgba(0, 0, 0, 0.32),
+          0 0 0 1.5px rgba(255, 255, 255, 0.1);
+      }
+      .flip-card.state-empty .fn {
+        opacity: 0.18;
+      }
+      .flip-card.state-full {
+        box-shadow:
+          0 12px 36px rgba(0, 0, 0, 0.38),
+          0 0 0 2px rgba(255, 255, 255, 0.25);
+      }
+      .flip-card.state-edit {
+        box-shadow:
+          0 0 0 3px rgba(255, 255, 255, 0.8),
+          0 12px 36px rgba(0, 0, 0, 0.38) !important;
+      }
+      .fh {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .fh.t {
+        top: 0;
+        background: var(--card-t);
+        border-bottom: 1.5px solid var(--sep);
+        align-items: flex-end;
+      }
+      .fh.b {
+        bottom: 0;
+        background: var(--card-b);
+        align-items: flex-start;
+      }
+      .fn {
+        font-size: clamp(100px, 17vw, 390px);
+        font-weight: 800;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        pointer-events: none;
+        color: var(--txt);
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.24);
+        transition: opacity 0.25s;
+      }
+      .fh.t .fn {
+        transform: translateY(50%);
+      }
+      .fh.b .fn {
+        transform: translateY(-50%);
+      }
+      .fline {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 0;
+        background: var(--line);
+        z-index: 8;
+        transform: translateY(-50%);
+      }
+      .finp {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 1px;
+        z-index: 20;
+        cursor: text;
+        -moz-appearance: textfield;
+      }
+      .finp::-webkit-inner-spin-button,
+      .finp::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+      }
+      .flip-sep {
+        font-size: clamp(54px, 9vw, 200px);
+        font-weight: 700;
+        opacity: 0.45;
+        line-height: 1;
+        padding-bottom: clamp(10px, 2vw, 26px);
+        flex-shrink: 0;
+      }
+      .fa {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        z-index: 10;
+        backface-visibility: hidden;
+      }
+      .fa .fn {
+        pointer-events: none;
+      }
+      .fa.at {
+        top: 0;
+        background: var(--card-t);
+        align-items: flex-end;
+        transform-origin: bottom center;
+        animation: fD 0.13s ease-in forwards;
+      }
+      .fa.ab {
+        bottom: 0;
+        background: var(--card-b);
+        align-items: flex-start;
+        transform-origin: top center;
+        animation: fU 0.13s ease-out 0.13s forwards;
+      }
+      .fa.at .fn {
+        transform: translateY(50%);
+      }
+      .fa.ab .fn {
+        transform: translateY(-50%);
+      }
+      @keyframes fD {
+        0% {
+          transform: rotateX(0);
+        }
+        100% {
+          transform: rotateX(-90deg);
+        }
+      }
+      @keyframes fU {
+        0% {
+          transform: rotateX(90deg);
+        }
+        100% {
+          transform: rotateX(0);
+        }
+      }
+      .meta-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: clamp(2px, 0.6vh, 6px) 0;
+        min-height: 22px;
+      }
+      .pct-lbl {
+        font-size: clamp(11px, 2.5vw, 14px);
+        font-weight: 700;
+        opacity: 0.8;
+        min-width: 38px;
+        text-align: center;
+      }
+      .prog-bar {
+        flex: 1;
+        max-width: clamp(140px, 40vw, 320px);
+        height: 4px;
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .prog-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.65);
+        width: 0%;
+        transition: width 0.8s ease;
+      }
+      .info-lbl {
+        font-size: clamp(10px, 2.5vw, 13px);
+        font-weight: 600;
+        opacity: 0.6;
+        text-align: center;
+      }
+      .subject-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+      }
+      .subject-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 50px;
+        padding: 6px 16px;
+        width: 100%;
+        max-width: clamp(200px, 70vw, 500px);
+        transition:
+          background 0.2s,
+          box-shadow 0.2s;
+      }
+      .subject-wrap:focus-within {
+        background: rgba(0, 0, 0, 0.26);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
+      }
+      .subject-ico {
+        font-size: 14px;
+        opacity: 0.55;
+        flex-shrink: 0;
+      }
+      .subject-inp {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--txt);
+        font-family: 'Vazirmatn', sans-serif;
+        font-size: clamp(12px, 3vw, 14px);
+        font-weight: 600;
+        text-align: right;
+        user-select: text;
+        -webkit-user-select: text;
+        min-width: 0;
+      }
+      .subject-inp::placeholder {
+        color: var(--txt2);
+      }
+      .presets-row {
+        display: flex;
+        gap: clamp(5px, 1.5vw, 10px);
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: clamp(2px, 0.6vh, 6px) 0;
+        z-index: 2;
+      }
+      .pbtn {
+        padding: clamp(5px, 1.2vh, 8px) clamp(10px, 3vw, 20px);
+        border-radius: 50px;
+        border: 1.5px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.1);
+        color: var(--txt);
+        font-size: clamp(10px, 2.5vw, 13px);
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.18s;
+      }
+      .pbtn:hover,
+      .pbtn.on {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+      .pbtn:active {
+        transform: scale(0.88);
+      }
+      .bottom-area {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(5px, 1.2vh, 10px);
+        padding-top: clamp(2px, 0.6vh, 6px);
+        z-index: 2;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: clamp(16px, 5vw, 36px);
+      }
+      .ctrl {
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        flex-shrink: 0;
+      }
+      .ctrl:active {
+        transform: scale(0.82) !important;
+      }
+      .ctrl-g {
+        width: clamp(44px, 11vw, 62px);
+        height: clamp(44px, 11vw, 62px);
+        background: var(--glass);
+        color: var(--txt);
+        font-size: clamp(18px, 4.5vw, 24px);
+      }
+      .ctrl-g:active {
+        background: var(--glass2);
+      }
+      .ctrl-g.dim {
+        opacity: 0.25;
+        pointer-events: none;
+      }
+      .ctrl-play {
+        width: clamp(70px, 17vw, 94px);
+        height: clamp(70px, 17vw, 94px);
+        background: rgba(255, 255, 255, 0.24);
+        box-shadow:
+          0 8px 28px rgba(0, 0, 0, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      }
+      .ctrl-play:active {
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .ctrl-play svg {
+        width: clamp(22px, 5.5vw, 30px);
+        height: clamp(22px, 5.5vw, 30px);
+      }
+      .laps-scroll {
+        width: 100%;
+        max-height: clamp(40px, 7vh, 70px);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+      }
+      .lap-item {
+        background: rgba(0, 0, 0, 0.14);
+        border-radius: 8px;
+        padding: 4px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: clamp(10px, 2.5vw, 12px);
+        font-weight: 600;
+        animation: lapIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes lapIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .lap-fast {
+        color: #ffe066;
+      }
+      .lap-slow {
+        color: #ffa0a0;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        backdrop-filter: blur(8px);
+      }
+      .overlay.open {
+        display: flex;
+      }
+      .sheet {
+        background: var(--sheet);
+        width: 90%;
+        max-width: 540px;
+        border-radius: 22px;
+        overflow: hidden;
+        animation: popIn 0.28s cubic-bezier(0.32, 1, 0.38, 1);
+        max-height: 88dvh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 52px rgba(0, 0, 0, 0.45);
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0.93);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .sheet-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px 10px;
+        background: rgba(0, 0, 0, 0.16);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+      }
+      .sheet-title {
+        font-size: clamp(14px, 2.5vw, 17px);
+        font-weight: 800;
+      }
+      .sheet-close {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.14);
+        color: var(--txt);
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sheet-close:active {
+        background: rgba(255, 255, 255, 0.28);
+      }
+      .sheet-body {
+        overflow-y: auto;
+        flex: 1;
+        padding: 12px 18px 22px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+      }
+      .sec-ttl {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 0.45;
+        margin: 10px 0 8px;
+      }
+      .tgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+        gap: 7px;
+        margin-bottom: 12px;
+      }
+      .tbtn {
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 13px;
+        padding: 9px 4px 7px;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.1);
+        font-family: inherit;
+        color: var(--txt);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+      }
+      .tbtn:active {
+        transform: translateY(-2px);
+      }
+      .tbtn.on {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.15);
+      }
+      .tswatch {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: 2px solid rgba(255, 255, 255, 0.16);
+        flex-shrink: 0;
+      }
+      .tname {
+        font-size: 10px;
+        font-weight: 700;
+        opacity: 0.9;
+        text-align: center;
+        word-break: break-all;
+      }
+      .cbox {
+        background: rgba(0, 0, 0, 0.13);
+        border-radius: 13px;
+        overflow: hidden;
+      }
+      .crow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 13px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .crow:last-child {
+        border-bottom: none;
+      }
+      .clbl {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.82;
+      }
+      .cpick {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .cpicker {
+        width: 34px;
+        height: 34px;
+        border: 2px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        cursor: pointer;
+        padding: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .cpicker::-webkit-color-swatch-wrapper {
+        padding: 0;
+        border-radius: 4px;
+      }
+      .cpicker::-webkit-color-swatch {
+        border: none;
+        border-radius: 4px;
+      }
+      .chex {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        border-radius: 7px;
+        color: var(--txt);
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        width: 74px;
+        padding: 5px 8px;
+        outline: none;
+        font-weight: 700;
+        text-transform: uppercase;
+        user-select: text;
+        -webkit-user-select: text;
+      }
+      .chex:focus {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+      .hperiod {
+        display: flex;
+        gap: 3px;
+        margin-bottom: 11px;
+        background: rgba(0, 0, 0, 0.16);
+        border-radius: 28px;
+        padding: 3px;
+      }
+      .hpb {
+        flex: 1;
+        padding: 6px 0;
+        border: none;
+        border-radius: 26px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        background: transparent;
+        color: var(--txt2);
+        transition: all 0.2s;
+      }
+      .hpb.on {
+        background: rgba(255, 255, 255, 0.22);
+        color: var(--txt);
+      }
+      .hstats {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 11px;
+      }
+      .hstat {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.13);
+        border-radius: 11px;
+        padding: 10px 5px;
+        text-align: center;
+      }
+      .hsv {
+        font-size: clamp(18px, 3vw, 22px);
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 2px;
+      }
+      .hsl {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        opacity: 0.42;
+      }
+      .hbarswrap {
+        background: rgba(0, 0, 0, 0.11);
+        border-radius: 11px;
+        padding: 9px 11px;
+        margin-bottom: 11px;
+      }
+      .hbarstitle {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 0.42;
+        margin-bottom: 7px;
+      }
+      .hbars {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 46px;
+      }
+      .hbarcol {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        height: 100%;
+        justify-content: flex-end;
+      }
+      .hbarfill {
+        width: 100%;
+        border-radius: 3px 3px 0 0;
+        background: rgba(255, 255, 255, 0.4);
+        min-height: 3px;
+        transition: height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .hbarfill.today {
+        background: rgba(255, 255, 255, 0.82);
+      }
+      .hbarlbl {
+        font-size: 8px;
+        font-weight: 600;
+        opacity: 0.42;
+      }
+      .hday {
+        background: rgba(0, 0, 0, 0.11);
+        border-radius: 11px;
+        padding: 10px;
+        margin-bottom: 7px;
+      }
+      .hdayhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .hdaydate {
+        font-size: 12px;
+        font-weight: 800;
+        opacity: 0.88;
+      }
+      .hdaytotal {
+        font-size: 12px;
+        font-weight: 700;
+        opacity: 0.68;
+      }
+      .hsessrow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 11px;
+        gap: 6px;
+        position: relative;
+      }
+      .hdur {
+        background: rgba(255, 255, 255, 0.13);
+        border-radius: 9px;
+        padding: 2px 7px;
+        font-weight: 700;
+      }
+      .ptag {
+        background: rgba(255, 200, 0, 0.16);
+        color: #ffe066;
+        border-radius: 7px;
+        padding: 1px 6px;
+        font-size: 9px;
+        font-weight: 700;
+        border: 1px solid rgba(255, 200, 0, 0.26);
+      }
+      .swtag {
+        background: rgba(100, 200, 255, 0.16);
+        color: #7ee8ff;
+        border-radius: 7px;
+        padding: 1px 6px;
+        font-size: 9px;
+        font-weight: 700;
+        border: 1px solid rgba(100, 200, 255, 0.26);
+      }
+      .subjtag {
+        background: rgba(180, 255, 180, 0.14);
+        color: #a8ffa8;
+        border-radius: 7px;
+        padding: 1px 7px;
+        font-size: 9px;
+        font-weight: 700;
+        border: 1px solid rgba(180, 255, 180, 0.24);
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .del-sess-btn {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 80, 80, 0.18);
+        color: #ffa0a0;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        margin-right: 2px;
+      }
+      .del-sess-btn:active {
+        background: rgba(255, 80, 80, 0.38);
+        transform: scale(0.88);
+      }
+      .del-sess-btn.confirm {
+        background: rgba(255, 60, 60, 0.38);
+        color: #fff;
+        animation: shake 0.3s ease;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-3px);
+        }
+        75% {
+          transform: translateX(3px);
+        }
+      }
+      .sess-left {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-shrink: 0;
+      }
+      .sess-mid {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .sess-right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .hempty {
+        text-align: center;
+        padding: 34px 20px;
+        opacity: 0.38;
+        font-size: 13px;
+      }
+      .hclear {
+        width: 100%;
+        padding: 10px;
+        background: rgba(255, 60, 60, 0.14);
+        color: #ffaaaa;
+        border: 1px solid rgba(255, 60, 60, 0.24);
+        border-radius: 11px;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+        margin-top: 7px;
+        transition: all 0.2s;
+      }
+      .hclear:active {
+        background: rgba(255, 60, 60, 0.26);
+      }
+      .celebrate {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(8px);
+      }
+      .celebrate.show {
+        display: flex;
+        animation: celIn 0.35s cubic-bezier(0.32, 1, 0.38, 1);
+      }
+      @keyframes celIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .celbox {
+        background: var(--sheet);
+        border-radius: 22px;
+        padding: 26px 22px 22px;
+        text-align: center;
+        max-width: 310px;
+        width: 90%;
+        box-shadow: 0 22px 56px rgba(0, 0, 0, 0.48);
+        animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+      .celemo {
+        font-size: 56px;
+        display: block;
+        margin-bottom: 10px;
+        animation: bounce 0.9s ease infinite;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
+      }
+      .celtitle {
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 5px;
+      }
+      .celsub {
+        font-size: 13px;
+        opacity: 0.72;
+        margin-bottom: 18px;
+        line-height: 1.55;
+      }
+      .celbtn {
+        background: rgba(255, 255, 255, 0.22);
+        color: var(--txt);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 32px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
+      .celbtn:active {
+        background: rgba(255, 255, 255, 0.38);
+        transform: scale(0.96);
+      }
+      .celbtn.ringing {
+        animation: ringPulse 1s ease infinite;
+      }
+      @keyframes ringPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+        }
+      }
+      .confwrap {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 499;
+        overflow: hidden;
+      }
+      .conf {
+        position: absolute;
+        animation: fall linear forwards;
+      }
+      @keyframes fall {
+        0% {
+          opacity: 1;
+          transform: translateY(-20px) rotate(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(110vh) rotate(720deg);
+        }
+      }
+      .toast {
+        position: fixed;
+        bottom: clamp(14px, 4vw, 24px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 18px;
+        font-size: 12px;
+        font-weight: 700;
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+        white-space: nowrap;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+      }
+
+      @media (max-width: 1024px) and (orientation: portrait) {
+        html,
+        body {
+          overflow: hidden;
+          height: 100%;
+        }
+        .shell {
+          position: fixed;
+          inset: 0;
+          display: grid;
+          grid-template-rows: auto auto 1fr auto auto auto;
+          align-items: stretch;
+          justify-items: center;
+          padding: max(env(safe-area-inset-top), 8px) max(env(safe-area-inset-right), 12px)
+            max(env(safe-area-inset-bottom), 8px) max(env(safe-area-inset-left), 12px);
+          gap: 0;
+          overflow: hidden;
+        }
+        .topbar {
+          padding-bottom: 4px;
+          padding-top: 6px;
+        }
+        .tabs-status {
+          width: 82%;
+          padding-bottom: 4px;
+        }
+        .clock-area {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          overflow: hidden;
+          padding: 3px 0;
+        }
+        .flip-clock {
+          flex-direction: column;
+          gap: 0;
+          direction: ltr;
+          width: 100%;
+          height: 100%;
+          align-items: stretch;
+          justify-content: stretch;
+        }
+        .flip-sep {
+          font-size: clamp(14px, 2.5vw, 22px);
+          padding: 0;
+          opacity: 0.35;
+          line-height: 1;
+          flex-shrink: 0;
+          align-self: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: clamp(12px, 2vh, 20px);
+        }
+        .flip-unit {
+          flex: 1;
+          min-height: 0;
+          flex-direction: row;
+          align-items: center;
+          width: 100%;
+          gap: 8px;
+        }
+        .flip-card {
+          flex: 1;
+          width: auto;
+          height: 100%;
+          min-height: 0;
+          border-radius: clamp(12px, 2.5vw, 22px);
+        }
+        .flip-lbl {
+          font-size: clamp(9px, 1.8vw, 13px);
+          letter-spacing: 1.5px;
+          opacity: 0.5;
+          min-width: 34px;
+          text-align: center;
+          writing-mode: horizontal-tb;
+          display: block;
+        }
+        .fn {
+          font-size: clamp(40px, 14vh, 130px);
+        }
+        .meta-row {
+          padding: 1px 0;
+          min-height: 16px;
+        }
+        .presets-row {
+          gap: 4px;
+          padding: 2px 0;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          justify-content: flex-start;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        .presets-row::-webkit-scrollbar {
+          display: none;
+        }
+        .pbtn {
+          padding: 4px 10px;
+          font-size: clamp(10px, 2.2vw, 12px);
+          flex-shrink: 0;
+        }
+        .bottom-area {
+          gap: 5px;
+          padding-top: 3px;
+        }
+        .subject-row {
+          width: 100%;
+        }
+        .subject-wrap {
+          max-width: 100%;
+          padding: 5px 13px;
+        }
+        .subject-inp {
+          font-size: clamp(11px, 2.8vw, 13px);
+        }
+        .ctrl-play {
+          width: clamp(56px, 13vw, 78px);
+          height: clamp(56px, 13vw, 78px);
+        }
+        .ctrl-g {
+          width: clamp(40px, 9.5vw, 56px);
+          height: clamp(40px, 9.5vw, 56px);
+          font-size: clamp(16px, 3.8vw, 21px);
+        }
+        .controls {
+          gap: clamp(16px, 5.5vw, 32px);
+        }
+        .laps-scroll {
+          max-height: clamp(30px, 5vh, 52px);
+        }
+      }
+      @media (max-width: 480px) and (orientation: portrait) {
+        .flip-lbl {
+          display: none;
+        }
+        .subject-wrap {
+          padding: 5px 11px;
+        }
+        .subject-inp {
+          font-size: 12px;
+        }
+      }
+      @media (max-width: 1024px) and (orientation: landscape) {
+        .shell {
+          grid-template-rows: auto auto 1fr auto;
+          padding: 4px 10px 6px;
+        }
+        .flip-clock {
+          flex-direction: row;
+          gap: clamp(4px, 1.5vw, 12px);
+          height: 100%;
+        }
+        .flip-card {
+          width: clamp(90px, 24vh, 200px);
+          height: clamp(110px, 32vh, 256px);
+          border-radius: clamp(12px, 2.2vh, 24px);
+        }
+        .fn {
+          font-size: clamp(64px, 21vh, 168px);
+        }
+        .flip-sep {
+          font-size: clamp(42px, 14vh, 120px);
+          padding-bottom: clamp(6px, 1.5vh, 16px);
+        }
+        .flip-lbl {
+          font-size: clamp(8px, 1.3vh, 11px);
+        }
+        .ctrl-play {
+          width: clamp(46px, 10vh, 68px);
+          height: clamp(46px, 10vh, 68px);
+        }
+        .ctrl-g {
+          width: clamp(32px, 8vh, 50px);
+          height: clamp(32px, 8vh, 50px);
+          font-size: clamp(14px, 3.5vh, 20px);
+        }
+        .tabs-status {
+          padding-bottom: 1px;
+        }
+        .bottom-area {
+          gap: 3px;
+          padding-top: 2px;
+        }
+        .laps-scroll {
+          max-height: clamp(22px, 4vh, 40px);
+        }
+        .presets-row {
+          display: none !important;
+        }
+        .meta-row {
+          display: none !important;
+        }
+        .subject-row {
+          width: 100%;
+        }
+        .subject-wrap {
+          max-width: clamp(160px, 45vw, 360px);
+          padding: 4px 12px;
+        }
+        .subject-inp {
+          font-size: 11px;
+        }
+        .subject-ico {
+          font-size: 12px;
+        }
+      }
+      @media (min-width: 1025px) and (orientation: landscape) {
+        .flip-card {
+          width: clamp(200px, 15vw, 310px);
+          height: clamp(260px, 20vw, 400px);
+        }
+        .fn {
+          font-size: clamp(160px, 12vw, 270px);
+        }
+        .flip-sep {
+          font-size: clamp(80px, 7vw, 135px);
+        }
+        .subject-wrap {
+          max-width: clamp(280px, 40vw, 520px);
+        }
+      }
+      @media (min-width: 1600px) and (orientation: landscape) {
+        .flip-card {
+          width: 370px;
+          height: 470px;
+        }
+        .fn {
+          font-size: 330px;
+        }
+        .flip-sep {
+          font-size: 165px;
+        }
+      }
+      @media (min-width: 1025px) and (orientation: portrait) {
+        .flip-card {
+          width: 360px;
+          height: 460px;
+        }
+        .fn {
+          font-size: 310px;
+        }
+        .flip-sep {
+          font-size: 155px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="topbar">
+        <span class="brand">FocusFlowFlip</span>
+        <div class="topbar-btns">
+          <button class="icon-btn" onclick="openHist()">📊</button>
+          <button class="icon-btn" onclick="openTheme()">🎨</button>
+        </div>
+      </div>
+      <div class="tabs-status">
+        <div class="tabs">
+          <button class="tab active" id="tabCd" onclick="switchMode('cd')">⏱ معکوس</button>
+          <button class="tab" id="tabSw" onclick="switchMode('sw')">⏲ کرونومتر</button>
+        </div>
+        <div class="status-row">
+          <span class="sdot" id="sdot"></span>
+          <span class="slbl" id="slbl">روی اعداد کلیک کن تا تنظیم کنی</span>
+        </div>
+      </div>
+      <div class="clock-area">
+        <div class="flip-clock">
+          <div class="flip-unit">
+            <div class="flip-card state-empty" id="cH" onclick="focusInp('iH')">
+              <div class="fh t"><div class="fn" id="tH">00</div></div>
+              <div class="fh b"><div class="fn" id="bH">00</div></div>
+              <div class="fline"></div>
+              <input class="finp" type="number" id="iH" min="0" max="99" inputmode="numeric" />
+            </div>
+            <div class="flip-lbl">ساعت</div>
+          </div>
+          <div class="flip-sep">:</div>
+          <div class="flip-unit">
+            <div class="flip-card state-empty" id="cM" onclick="focusInp('iM')">
+              <div class="fh t"><div class="fn" id="tM">00</div></div>
+              <div class="fh b"><div class="fn" id="bM">00</div></div>
+              <div class="fline"></div>
+              <input class="finp" type="number" id="iM" min="0" max="59" inputmode="numeric" />
+            </div>
+            <div class="flip-lbl">دقیقه</div>
+          </div>
+          <div class="flip-sep">:</div>
+          <div class="flip-unit">
+            <div class="flip-card state-empty" id="cS" onclick="focusInp('iS')">
+              <div class="fh t"><div class="fn" id="tS">00</div></div>
+              <div class="fh b"><div class="fn" id="bS">00</div></div>
+              <div class="fline"></div>
+              <input class="finp" type="number" id="iS" min="0" max="59" inputmode="numeric" />
+            </div>
+            <div class="flip-lbl">ثانیه</div>
+          </div>
+        </div>
+      </div>
+      <div class="meta-row" id="metaRow">
+        <div
+          id="progRow"
+          style="
+            display: none;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+          "
+        >
+          <div class="pct-lbl" id="pctLbl">۰٪</div>
+          <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        </div>
+        <div class="info-lbl" id="infoLbl">امروز: ۰ دقیقه</div>
+      </div>
+      <div class="presets-row" id="presetsRow">
+        <button class="pbtn" onclick="setPreset(25)" data-m="25">۲۵ دقیقه</button>
+        <button class="pbtn" onclick="setPreset(45)" data-m="45">۴۵ دقیقه</button>
+        <button class="pbtn" onclick="setPreset(60)" data-m="60">۱ ساعت</button>
+        <button class="pbtn" onclick="setPreset(90)" data-m="90">۱.۵ ساعت</button>
+      </div>
+      <div class="bottom-area">
+        <div class="subject-row" id="subjectRow">
+          <div class="subject-wrap">
+            <span class="subject-ico">📚</span>
+            <input
+              class="subject-inp"
+              id="subjectInp"
+              type="text"
+              placeholder="نام درس یا موضوع (اختیاری)"
+              maxlength="40"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+        </div>
+        <div class="controls">
+          <button class="ctrl ctrl-g" onclick="resetTimer()">⟳</button>
+          <button class="ctrl ctrl-play" onclick="toggleTimer()">
+            <svg id="playIcon" viewBox="0 0 24 24" fill="white">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </button>
+          <button class="ctrl ctrl-g dim" id="lapBtn" onclick="addLap()">⏺</button>
+        </div>
+        <div class="laps-scroll" id="lapsWrap"></div>
+      </div>
+    </div>
+
+    <div class="celebrate" id="celebrate">
+      <div class="celbox" onclick="event.stopPropagation()">
+        <span class="celemo" id="celEmo">🎉</span>
+        <div class="celtitle" id="celTtl">آفرین!</div>
+        <div class="celsub" id="celSub"></div>
+        <button class="celbtn ringing" id="celBtn" onclick="closeCel()">
+          <span id="celBtnIco">🔔</span>
+          <span id="celBtnTxt">بستن و قطع صدا</span>
+        </button>
+      </div>
+    </div>
+    <div class="confwrap" id="confWrap"></div>
+
+    <div class="overlay" id="themePanel" onclick="if (event.target === this) closeTheme();">
+      <div class="sheet">
+        <div class="sheet-hdr">
+          <span class="sheet-title">🎨 تم و رنگ</span>
+          <button class="sheet-close" onclick="closeTheme()">✕</button>
+        </div>
+        <div class="sheet-body">
+          <div class="sec-ttl">تم‌های آماده</div>
+          <div class="tgrid" id="tGrid"></div>
+          <div class="sec-ttl" id="customTitle">
+            رنگ‌بندی دستی
+            <span style="opacity: 0.55; font-weight: 400">(تم دستی را انتخاب کنید)</span>
+          </div>
+          <div class="cbox" id="cBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="histPanel" onclick="if (event.target === this) closeHist();">
+      <div class="sheet">
+        <div class="sheet-hdr">
+          <span class="sheet-title">📊 تاریخچه مطالعه</span>
+          <button class="sheet-close" onclick="closeHist()">✕</button>
+        </div>
+        <div class="sheet-body" id="histBody"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const pad = (n) => String(~~n).padStart(2, '0');
+      const fmt = (s) => {
+        s = Math.max(0, ~~s);
+        return `${pad(s / 3600)}:${pad((s % 3600) / 60)}:${pad(s % 60)}`;
+      };
+      const toFa = (n) => String(~~n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+      function fmtTime(s) {
+        const m = ~~(s / 60),
+          h = ~~(m / 60),
+          r = m % 60;
+        return h > 0 ? `${toFa(h)}ساعت ${toFa(r)}دقیقه` : `${toFa(m)} دقیقه`;
+      }
+
+      /* ── ELECTRON BRIDGE ─────────────────────────────────────────────────── */
+      const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
+      if (isElectron) {
+        window.electronAPI.onStartAlarm(() => startAlarm());
+        window.electronAPI.onStopAlarm(() => {
+          stopAlarm();
+          closeCel();
+        });
+      }
+      /* ───────────────────────────────────────────────────────────────────── */
+
+      function getTehranDate(d) {
+        const date = d || new Date();
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Tehran',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).formatToParts(date);
+        const p = {};
+        parts.forEach((x) => {
+          p[x.type] = x.value;
+        });
+        return `${p.year}-${p.month}-${p.day}`;
+      }
+      function getTehranTime(d) {
+        const date = d || new Date();
+        return new Intl.DateTimeFormat('fa-IR', {
+          timeZone: 'Asia/Tehran',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
+      }
+
+      let _tT;
+      function toast(msg) {
+        const t = $('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(_tT);
+        _tT = setTimeout(() => t.classList.remove('show'), 2400);
+      }
+
+      /* ALARM */
+      let _alarmAC = null,
+        _alarmNodes = [],
+        _alarmTimer = null,
+        _alarmActive = false;
+      function _alarmBurst(ac, startTime) {
+        const notes = [523, 659, 784, 1047];
+        notes.forEach((freq, i) => {
+          const osc = ac.createOscillator(),
+            gain = ac.createGain();
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = startTime + i * 0.18;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.38, t + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+          osc.start(t);
+          osc.stop(t + 0.6);
+          _alarmNodes.push(osc, gain);
+        });
+      }
+      function _scheduleAlarm() {
+        if (!_alarmActive || !_alarmAC) return;
+        const now = _alarmAC.currentTime;
+        _alarmBurst(_alarmAC, now);
+        _alarmBurst(_alarmAC, now + 1.1);
+        _alarmTimer = setTimeout(_scheduleAlarm, 1800);
+      }
+      function startAlarm() {
+        stopAlarm();
+        _alarmActive = true;
+        try {
+          _alarmAC = new (window.AudioContext || window.webkitAudioContext)();
+          _scheduleAlarm();
+        } catch (e) {
+          _alarmActive = false;
+        }
+      }
+      function stopAlarm() {
+        _alarmActive = false;
+        clearTimeout(_alarmTimer);
+        _alarmTimer = null;
+        if (_alarmAC) {
+          _alarmNodes.forEach((n) => {
+            try {
+              n.disconnect();
+            } catch (e) {}
+          });
+          _alarmNodes = [];
+          try {
+            _alarmAC.close();
+          } catch (e) {}
+        }
+        _alarmAC = null;
+      }
+
+      /* THEMES */
+      const THEMES = [
+        { id: 'brick', n: 'آجری', bg: '#b8624a', c: '#9e5039', c2: '#cc7258' },
+        { id: 'marsala', n: 'زرشکی', bg: '#9b3a4a', c: '#8a2a3a', c2: '#ac4a5a' },
+        { id: 'wine', n: 'شرابی', bg: '#6a1a2a', c: '#590a1a', c2: '#7a2a3a' },
+        { id: 'burgundy', n: 'بورگوندی', bg: '#7a2a3a', c: '#691a2a', c2: '#8b3a4a' },
+        { id: 'rosewood', n: 'رزوود', bg: '#a05248', c: '#904232', c2: '#b0625a' },
+        { id: 'coffee', n: 'نسکافه', bg: '#7b5b3a', c: '#6b4b2a', c2: '#8c6b4a' },
+        { id: 'cocoa', n: 'کاکائو', bg: '#5c3a2a', c: '#4b2a1a', c2: '#6c4a3a' },
+        { id: 'mocha', n: 'موکا', bg: '#8b6347', c: '#7a5336', c2: '#9b7357' },
+        { id: 'sienna', n: 'سیه‌نا', bg: '#a0522d', c: '#8f411d', c2: '#b0623d' },
+        { id: 'rust', n: 'زنگ‌زده', bg: '#9a4a2a', c: '#893a1a', c2: '#aa5a3a' },
+        { id: 'copper', n: 'مسی', bg: '#b87333', c: '#a76323', c2: '#c88343' },
+        { id: 'terracotta', n: 'تراکوتا', bg: '#c47c5a', c: '#b36c4a', c2: '#d58c6a' },
+        { id: 'dusty', n: 'گلبهی', bg: '#c9897c', c: '#b8796c', c2: '#d9998c' },
+        { id: 'blush', n: 'صورتی', bg: '#d4748a', c: '#c3647a', c2: '#e4849a' },
+        { id: 'peach', n: 'هلو', bg: '#d4906a', c: '#c3805a', c2: '#e4a07a' },
+        { id: 'coral', n: 'مرجان', bg: '#d06050', c: '#bf5040', c2: '#e07060' },
+        { id: 'mauve', n: 'موو', bg: '#9a7a9a', c: '#8a6a8a', c2: '#aa8aaa' },
+        { id: 'plum', n: 'آلو', bg: '#7a3a7a', c: '#692a69', c2: '#8a4a8a' },
+        { id: 'lavender', n: 'اسطخودوس', bg: '#7a6a9a', c: '#695a8a', c2: '#8a7aaa' },
+        { id: 'teal', n: 'فیروزه', bg: '#2a7a7a', c: '#1a6a6a', c2: '#3a8a8a' },
+        { id: 'forest', n: 'جنگل', bg: '#3a6a4a', c: '#2a5a3a', c2: '#4a7a5a' },
+        { id: 'sage', n: 'سیج', bg: '#6a8a6a', c: '#5a7a5a', c2: '#7a9a7a' },
+        { id: 'olive', n: 'زیتونی', bg: '#6a7a3a', c: '#5a6a2a', c2: '#7a8a4a' },
+        { id: 'navy', n: 'نیوی', bg: '#2a3a6a', c: '#1a2a5a', c2: '#3a4a7a' },
+        { id: 'slate', n: 'اسلیت', bg: '#5a6a7a', c: '#4a5a6a', c2: '#6a7a8a' },
+        { id: 'charcoal', n: 'ذغالی', bg: '#2a2a2a', c: '#1a1a1a', c2: '#3a3a3a' },
+        { id: 'midnight', n: 'نیمه‌شب', bg: '#1a1a2e', c: '#0f0f1e', c2: '#2a2a3e' },
+        { id: 'gold', n: 'طلایی', bg: '#9a7a2a', c: '#896a1a', c2: '#aa8a3a' },
+        { id: 'cream', n: 'کرم', bg: '#c8a87a', c: '#b7986a', c2: '#d8b88a' },
+        { id: 'custom', n: 'دستی 🖌️', bg: '', c: '', c2: '' },
+      ];
+      let CC = { bg: '#7b5b3a', c: '#6b4b2a', c2: '#8b6b4a', txt: '#ffffff' };
+      let ACT = 'brick';
+      try {
+        const s = localStorage.getItem('ff_t5');
+        if (s) {
+          const p = JSON.parse(s);
+          ACT = p.id || 'brick';
+          if (p.cc && p.cc.bg) CC = { ...CC, ...p.cc };
+        }
+      } catch (e) {}
+      function _setVars(bg, ct, cb, txt) {
+        const r = document.documentElement;
+        r.style.setProperty('--bg', bg);
+        r.style.setProperty('--card-t', ct);
+        r.style.setProperty('--card-b', cb);
+        r.style.setProperty('--sheet', bg);
+        r.style.setProperty('--txt', txt || '#fff');
+        r.style.setProperty('--txt2', (txt || '#fff') + '7a');
+        document.body.style.background = bg;
+      }
+      function applyTheme(id) {
+        const th = THEMES.find((x) => x.id === id) || THEMES[0];
+        if (id === 'custom') _setVars(CC.bg, CC.c, CC.c2, CC.txt);
+        else _setVars(th.bg, th.c, th.c2, '#fff');
+        ACT = id;
+        localStorage.setItem('ff_t5', JSON.stringify({ id: ACT, cc: CC }));
+      }
+      function renderTGrid() {
+        $('tGrid').innerHTML = THEMES.map(
+          (t) =>
+            `<button class="tbtn${t.id === ACT ? ' on' : ''}" onclick="pickTheme('${t.id}')"><div class="tswatch" style="background:${t.id === 'custom' ? CC.bg : t.bg}"></div><span class="tname">${t.id === ACT ? '✓ ' : ''}${t.n}</span></button>`,
+        ).join('');
+        const ct = $('customTitle');
+        if (ct)
+          ct.innerHTML =
+            ACT === 'custom'
+              ? 'رنگ‌بندی دستی ✅ <span style="opacity:.55;font-weight:400">(فعال)</span>'
+              : 'رنگ‌بندی دستی <span style="opacity:.55;font-weight:400">(تم دستی را انتخاب کنید)</span>';
+      }
+      function pickTheme(id) {
+        applyTheme(id);
+        renderTGrid();
+        renderCustom();
+      }
+      const CF = [
+        { k: 'bg', l: 'پس‌زمینه اصلی', def: '#7b5b3a' },
+        { k: 'c', l: 'کارت بالا', def: '#6b4b2a' },
+        { k: 'c2', l: 'کارت پایین', def: '#8b6b4a' },
+        { k: 'txt', l: 'رنگ متن', def: '#ffffff' },
+      ];
+      function renderCustom() {
+        const isA = ACT === 'custom';
+        $('cBox').innerHTML = CF.map(
+          (f, i) =>
+            `<div class="crow"><span class="clbl">${f.l}</span><div class="cpick"><input type="color" class="cpicker" id="cp${i}" value="${CC[f.k] || f.def}" ${!isA ? 'disabled' : ''} oninput="liveCC('${f.k}',this.value,${i})" onchange="liveCC('${f.k}',this.value,${i})"/><input type="text" class="chex" id="ch${i}" value="${(CC[f.k] || f.def).toUpperCase()}" maxlength="7" spellcheck="false" ${!isA ? 'disabled' : ''} oninput="hexLive('${f.k}',this.value,${i})" onblur="hexCommit('${f.k}',this.value,${i})"/></div></div>`,
+        ).join('');
+        $('cBox').style.opacity = isA ? '1' : '0.42';
+      }
+      function liveCC(k, v, i) {
+        if (ACT !== 'custom') return;
+        CC[k] = v;
+        const h = $('ch' + i);
+        if (h) h.value = v.toUpperCase();
+        applyTheme('custom');
+        renderTGrid();
+      }
+      function hexLive(k, v, i) {
+        if (ACT !== 'custom') return;
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+          CC[k] = v;
+          const p = $('cp' + i);
+          if (p) p.value = v;
+          applyTheme('custom');
+          renderTGrid();
+        }
+      }
+      function hexCommit(k, v, i) {
+        if (ACT !== 'custom') return;
+        if (!v.startsWith('#')) v = '#' + v;
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+          CC[k] = v;
+          const p = $('cp' + i);
+          if (p) p.value = v;
+          const h = $('ch' + i);
+          if (h) h.value = v.toUpperCase();
+          applyTheme('custom');
+          renderTGrid();
+        } else {
+          const h = $('ch' + i);
+          if (h) h.value = (CC[k] || CF[i].def).toUpperCase();
+        }
+      }
+      function openTheme() {
+        $('themePanel').classList.add('open');
+        renderTGrid();
+        renderCustom();
+      }
+      function closeTheme() {
+        $('themePanel').classList.remove('open');
+      }
+
+      /* CONFETTI */
+      function launchConf() {
+        const w = $('confWrap');
+        w.innerHTML = '';
+        for (let i = 0; i < 68; i++) {
+          const c = document.createElement('div'),
+            sz = Math.random() * 10 + 5;
+          c.className = 'conf';
+          c.style.cssText = `width:${sz}px;height:${sz}px;background:rgba(255,255,255,${0.35 + Math.random() * 0.65});left:${Math.random() * 100}%;top:-20px;border-radius:${Math.random() > 0.5 ? '50%' : '2px'};animation-duration:${Math.random() * 2 + 1.5}s;animation-delay:${Math.random() * 0.8}s`;
+          w.appendChild(c);
+        }
+        setTimeout(() => (w.innerHTML = ''), 4500);
+      }
+      const MSGS = [
+        { e: '🎉', t: 'آفرین! جلسه تموم شد', s: 'عالی بودی! یه استراحت کوتاه بکن.' },
+        { e: '🏆', t: 'فوق‌العاده!', s: 'یه جلسه مطالعه کامل رو به اتمام رسوندی!' },
+        { e: '⭐', t: 'ستاره امروز توئی!', s: 'این تمرکز رو ادامه بده.' },
+        { e: '🚀', t: 'پرتاب موفق!', s: 'مغزت داره اطلاعات جدید رو پردازش می‌کنه.' },
+        { e: '💎', t: 'الماس تمرکز!', s: 'هر جلسه یه قدم به هدفت نزدیک‌تره.' },
+      ];
+      function showCel(sec, lbl) {
+        const m = MSGS[~~(Math.random() * MSGS.length)];
+        $('celEmo').textContent = m.e;
+        $('celTtl').textContent = m.t;
+        $('celSub').textContent = `${fmtTime(sec)} به عنوان ${lbl} ثبت شد! ${m.s}`;
+        $('celBtn').classList.add('ringing');
+        $('celBtnIco').textContent = '🔔';
+        $('celBtnTxt').textContent = 'بستن و قطع صدا';
+        $('celebrate').classList.add('show');
+        launchConf();
+        startAlarm();
+        /* ── Electron: notify main process ── */
+        if (isElectron) window.electronAPI.timerDone(sec, lbl);
+        if (Notification?.permission === 'granted')
+          new Notification('FocusFlowFlip', { body: 'تموم شد! 🎉' });
+      }
+      function closeCel() {
+        stopAlarm();
+        /* ── Electron: alarm dismissed ── */
+        if (isElectron) window.electronAPI.alarmStopped();
+        $('celebrate').classList.remove('show');
+        $('confWrap').innerHTML = '';
+        $('celBtn').classList.remove('ringing');
+        $('celBtnIco').textContent = '✓';
+        $('celBtnTxt').textContent = 'بستن';
+      }
+
+      /* STATE */
+      let MODE = 'cd',
+        RUN = false;
+      let rafId = null,
+        startMs = 0,
+        accSec = 0;
+      let total = 0,
+        initTotal = 0,
+        elapsed = 0,
+        laps = [];
+      let sessionStart = null,
+        sessionStartTehranDate = null;
+      let partialSaved = false;
+      let dH = -1,
+        dM = -1,
+        dS = -1,
+        lastTick = -1;
+      let history = [];
+      try {
+        history = JSON.parse(localStorage.getItem('studyHistory')) || [];
+      } catch (e) {}
+      history = history.map((s, i) => (s.id ? s : { ...s, id: 's' + Date.now() + i }));
+      function saveHist() {
+        try {
+          localStorage.setItem('studyHistory', JSON.stringify(history));
+        } catch (e) {}
+      }
+
+      /* RAF LOOP */
+      function rafLoop() {
+        if (!RUN) {
+          rafId = null;
+          return;
+        }
+        const diffSec = ~~((performance.now() - startMs) / 1000);
+        let curSec;
+        if (MODE === 'cd') {
+          curSec = Math.max(0, initTotal - accSec - diffSec);
+          total = curSec;
+        } else {
+          curSec = accSec + diffSec;
+          elapsed = curSec;
+        }
+        if (curSec !== lastTick) {
+          lastTick = curSec;
+          /* ── Electron: update tray tooltip ── */
+          if (isElectron) {
+            window.electronAPI.tick(MODE === 'cd' ? fmt(curSec) + ' مانده' : fmt(curSec));
+          }
+          updUI();
+          if (MODE === 'cd' && curSec === 0) {
+            RUN = false;
+            rafId = null;
+            partialSaved = true;
+            saveSession(initTotal, false, 'cd');
+            setPlayIco(false);
+            setStatus('idle');
+            lockCards(false);
+            $('lapBtn').classList.add('dim');
+            forceDispZero();
+            syncCardStates();
+            $('progFill').style.width = '100%';
+            $('pctLbl').textContent = '۱۰۰٪';
+            sessionStart = null;
+            sessionStartTehranDate = null;
+            const subj = getSubject();
+            setTimeout(() => showCel(initTotal, subj || 'تایمر'), 180);
+            return;
+          }
+        }
+        rafId = requestAnimationFrame(rafLoop);
+      }
+      function startRAF() {
+        startMs = performance.now();
+        lastTick = -1;
+        rafId = requestAnimationFrame(rafLoop);
+      }
+      function stopRAF() {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        const diff = ~~((performance.now() - startMs) / 1000);
+        if (MODE === 'cd') accSec = Math.min(accSec + diff, initTotal);
+        else accSec += diff;
+      }
+
+      /* FLIP */
+      function doFlip(cid, tid, bid, val, force) {
+        const nxt = pad(val),
+          top = $(tid),
+          bot = $(bid),
+          card = $(cid);
+        if (!force && top.textContent === nxt) return;
+        const prev = top.textContent;
+        card.querySelectorAll('.fa').forEach((el) => el.remove());
+        const at = document.createElement('div'),
+          ab = document.createElement('div');
+        at.className = 'fa at';
+        ab.className = 'fa ab';
+        at.innerHTML = `<div class="fn">${prev}</div>`;
+        ab.innerHTML = `<div class="fn">${nxt}</div>`;
+        card.appendChild(at);
+        card.appendChild(ab);
+        bot.textContent = nxt;
+        setTimeout(() => (top.textContent = nxt), 118);
+        at.addEventListener('animationend', () => at.remove(), { once: true });
+        ab.addEventListener('animationend', () => ab.remove(), { once: true });
+      }
+      function setDisp(h, m, s, force) {
+        h = ~~h;
+        m = ~~m;
+        s = ~~s;
+        if (force || h !== dH) {
+          doFlip('cH', 'tH', 'bH', h, force);
+          dH = h;
+        }
+        if (force || m !== dM) {
+          doFlip('cM', 'tM', 'bM', m, force);
+          dM = m;
+        }
+        if (force || s !== dS) {
+          doFlip('cS', 'tS', 'bS', s, force);
+          dS = s;
+        }
+      }
+      function forceDispZero() {
+        ['tH', 'bH', 'tM', 'bM', 'tS', 'bS'].forEach((id) => ($(id).textContent = '00'));
+        dH = 0;
+        dM = 0;
+        dS = 0;
+      }
+      function cardState(id, st) {
+        const c = $(id);
+        c.classList.remove('state-empty', 'state-full', 'state-edit');
+        c.classList.add('state-' + st);
+      }
+      function syncCardStates() {
+        if (MODE === 'sw') {
+          const st = RUN || elapsed > 0 ? 'full' : 'empty';
+          ['cH', 'cM', 'cS'].forEach((id) => cardState(id, st));
+          return;
+        }
+        if (RUN || (initTotal > 0 && total > 0)) {
+          ['cH', 'cM', 'cS'].forEach((id) => cardState(id, 'full'));
+          return;
+        }
+        const vals = [
+          parseInt($('iH').value) || 0,
+          parseInt($('iM').value) || 0,
+          parseInt($('iS').value) || 0,
+        ];
+        const any = vals.some((v) => v > 0);
+        ['cH', 'cM', 'cS'].forEach((id) => cardState(id, any ? 'full' : 'empty'));
+      }
+
+      /* UI */
+      function showProg(show) {
+        $('progRow').style.display = show ? 'flex' : 'none';
+        $('infoLbl').style.display = show ? 'none' : '';
+      }
+      function updUI() {
+        let h, m, s;
+        if (MODE === 'cd') {
+          h = ~~(total / 3600);
+          m = ~~((total % 3600) / 60);
+          s = total % 60;
+          if (initTotal > 0) {
+            const pct = ~~(((initTotal - total) / initTotal) * 100);
+            $('pctLbl').textContent = toFa(pct) + '٪';
+            $('progFill').style.width = pct + '%';
+          }
+        } else {
+          h = ~~(elapsed / 3600);
+          m = ~~((elapsed % 3600) / 60);
+          s = elapsed % 60;
+        }
+        setDisp(h, m, s, false);
+        const ts = todaySec();
+        $('infoLbl').textContent =
+          ts > 0
+            ? `امروز: ${fmtTime(ts)}`
+            : MODE === 'cd'
+              ? 'روی اعداد کلیک کن تا تنظیم کنی'
+              : 'شروع کن';
+      }
+      function setStatus(s) {
+        const dot = $('sdot');
+        dot.className = 'sdot';
+        if (s === 'run') {
+          dot.classList.add('run');
+          $('slbl').textContent = MODE === 'cd' ? 'در حال شمارش...' : 'در حال زمان‌سنجی...';
+        } else if (s === 'pause') {
+          $('slbl').textContent = 'متوقف ⏸';
+        } else {
+          $('slbl').textContent = MODE === 'cd' ? 'روی اعداد کلیک کن تا تنظیم کنی' : 'شروع کن';
+        }
+      }
+      function setPlayIco(p) {
+        $('playIcon').innerHTML = p
+          ? '<rect x="6" y="4" width="5" height="16" fill="white"/><rect x="14" y="4" width="5" height="16" fill="white"/>'
+          : '<polygon points="5 3 19 12 5 21 5 3" fill="white"/>';
+      }
+      function lockCards(lock) {
+        document
+          .querySelectorAll('.finp')
+          .forEach((el) => (el.style.pointerEvents = lock ? 'none' : 'auto'));
+        document
+          .querySelectorAll('.flip-card')
+          .forEach((el) => (el.style.cursor = lock ? 'default' : 'text'));
+      }
+      function getSubject() {
+        return ($('subjectInp').value || '').trim();
+      }
+
+      /* TOGGLE */
+      function toggleTimer() {
+        if (MODE === 'cd' && !RUN) {
+          if (total === 0 && initTotal === 0) {
+            const h = Math.min(99, Math.max(0, parseInt($('iH').value) || 0));
+            const m = Math.min(59, Math.max(0, parseInt($('iM').value) || 0));
+            const s = Math.min(59, Math.max(0, parseInt($('iS').value) || 0));
+            const t = h * 3600 + m * 60 + s;
+            if (!t) {
+              toast('زمان را وارد کنید');
+              return;
+            }
+            total = t;
+            initTotal = t;
+            accSec = 0;
+            partialSaved = false;
+          }
+        }
+        if (MODE === 'sw' && !RUN && elapsed === 0) {
+          accSec = 0;
+          partialSaved = false;
+        }
+        RUN = !RUN;
+        setPlayIco(RUN);
+        if (RUN) {
+          sessionStart = Date.now();
+          sessionStartTehranDate = getTehranDate();
+          setStatus('run');
+          lockCards(true);
+          startRAF();
+          if (MODE === 'cd') showProg(true);
+          if (MODE === 'sw') $('lapBtn').classList.remove('dim');
+          if (Notification?.permission === 'default') Notification.requestPermission();
+        } else {
+          stopRAF();
+          setStatus('pause');
+          if (MODE === 'sw' && elapsed > 0) {
+            saveSession(elapsed, true, 'sw');
+            partialSaved = true;
+          }
+          if (MODE === 'cd' && initTotal > 0) {
+            const studied = initTotal - total;
+            if (studied >= 5) {
+              saveSession(studied, true, 'cd');
+              partialSaved = true;
+            }
+          }
+          sessionStart = null;
+          sessionStartTehranDate = null;
+        }
+        syncCardStates();
+      }
+
+      /* RESET */
+      function resetTimer() {
+        savePartial();
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        RUN = false;
+        sessionStart = null;
+        sessionStartTehranDate = null;
+        accSec = 0;
+        elapsed = 0;
+        total = 0;
+        initTotal = 0;
+        laps = [];
+        partialSaved = false;
+        lastTick = -1;
+        setPlayIco(false);
+        setStatus('idle');
+        lockCards(false);
+        $('lapBtn').classList.add('dim');
+        showProg(false);
+        $('progFill').style.width = '0%';
+        $('pctLbl').textContent = '۰٪';
+        ['iH', 'iM', 'iS'].forEach((id) => ($(id).value = ''));
+        forceDispZero();
+        ['cH', 'cM', 'cS'].forEach((id) => cardState(id, 'empty'));
+        document.querySelectorAll('.pbtn').forEach((b) => b.classList.remove('on'));
+        $('lapsWrap').innerHTML = '';
+        updUI();
+      }
+
+      /* PRESET */
+      function setPreset(min) {
+        if (RUN) return;
+        const sec = min * 60;
+        $('iH').value = min >= 60 ? ~~(min / 60) : '';
+        $('iM').value = min >= 60 ? min % 60 || '' : min;
+        $('iS').value = '';
+        total = sec;
+        initTotal = sec;
+        accSec = 0;
+        partialSaved = false;
+        document
+          .querySelectorAll('.pbtn')
+          .forEach((b) => b.classList.toggle('on', parseInt(b.dataset.m) === min));
+        dH = -1;
+        dM = -1;
+        dS = -1;
+        setDisp(~~(sec / 3600), ~~((sec % 3600) / 60), sec % 60, false);
+        syncCardStates();
+        $('progFill').style.width = '0%';
+        updUI();
+      }
+
+      /* LAP */
+      function addLap() {
+        if (!RUN) return;
+        if (MODE === 'sw') {
+          laps.push(elapsed);
+          const prev = laps.length > 1 ? laps[laps.length - 2] : 0,
+            split = elapsed - prev;
+          const splits = laps.map((_, i) => (i === 0 ? laps[0] : laps[i] - laps[i - 1]));
+          const fast = Math.min(...splits),
+            slow = Math.max(...splits);
+          const cls =
+            splits.length > 1 && split === fast
+              ? 'lap-fast'
+              : splits.length > 1 && split === slow
+                ? 'lap-slow'
+                : '';
+          const el = document.createElement('div');
+          el.className = 'lap-item';
+          el.innerHTML = `<span>دور ${toFa(laps.length)}</span><span class="${cls}">+${fmt(split)}</span><span>${fmt(elapsed)}</span>`;
+          $('lapsWrap').prepend(el);
+        } else {
+          laps.push(total);
+          const el = document.createElement('div');
+          el.className = 'lap-item';
+          el.innerHTML = `<span>نقطه ${toFa(laps.length)}</span><span>${fmt(total)} مانده</span>`;
+          $('lapsWrap').prepend(el);
+        }
+      }
+
+      /* SWITCH MODE */
+      function switchMode(m) {
+        if (MODE === m) return;
+        savePartial();
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        MODE = m;
+        RUN = false;
+        sessionStart = null;
+        sessionStartTehranDate = null;
+        accSec = 0;
+        elapsed = 0;
+        total = 0;
+        initTotal = 0;
+        laps = [];
+        partialSaved = false;
+        lastTick = -1;
+        setPlayIco(false);
+        setStatus('idle');
+        lockCards(false);
+        $('lapBtn').classList.add('dim');
+        showProg(false);
+        $('progFill').style.width = '0%';
+        $('pctLbl').textContent = '۰٪';
+        ['iH', 'iM', 'iS'].forEach((id) => ($(id).value = ''));
+        forceDispZero();
+        ['cH', 'cM', 'cS'].forEach((id) => cardState(id, 'empty'));
+        document.querySelectorAll('.pbtn').forEach((b) => b.classList.remove('on'));
+        $('tabCd').classList.toggle('active', m === 'cd');
+        $('tabSw').classList.toggle('active', m === 'sw');
+        $('presetsRow').style.display = m === 'cd' ? 'flex' : 'none';
+        updUI();
+      }
+
+      /* INPUTS */
+      function focusInp(id) {
+        if (!RUN && MODE === 'cd') $(id).focus();
+      }
+      function setupInputs() {
+        const F = [
+          { i: 'iH', c: 'cH', t: 'tH', b: 'bH', max: 99, nx: 'iM' },
+          { i: 'iM', c: 'cM', t: 'tM', b: 'bM', max: 59, nx: 'iS' },
+          { i: 'iS', c: 'cS', t: 'tS', b: 'bS', max: 59, nx: null },
+        ];
+        F.forEach((f) => {
+          const el = $(f.i);
+          el.addEventListener('focus', () => {
+            if (MODE !== 'cd') return;
+            cardState(f.c, 'edit');
+            setTimeout(() => el.select(), 10);
+          });
+          el.addEventListener('blur', () => {
+            if (MODE !== 'cd') return;
+            let v = parseInt(el.value);
+            if (isNaN(v) || v < 0) v = 0;
+            v = Math.min(f.max, v);
+            el.value = v || '';
+            if (pad(v) !== $(f.t).textContent) doFlip(f.c, f.t, f.b, v, false);
+            const any = F.some((ff) => parseInt($(ff.i).value) > 0);
+            if (any) {
+              F.forEach((ff) => {
+                let vv = parseInt($(ff.i).value);
+                if (isNaN(vv) || vv < 0) vv = 0;
+                if (!$(ff.i).value) $(ff.i).value = 0;
+                if ($(ff.t).textContent !== pad(vv)) doFlip(ff.c, ff.t, ff.b, vv, false);
+              });
+            }
+            if (!RUN) {
+              total = 0;
+              initTotal = 0;
+              accSec = 0;
+              partialSaved = false;
+            }
+            syncCardStates();
+          });
+          el.addEventListener('input', () => {
+            if (MODE !== 'cd') {
+              el.value = '';
+              return;
+            }
+            let v = parseInt(el.value);
+            if (isNaN(v)) v = 0;
+            if (v < 0) v = 0;
+            if (v > f.max) v = f.max;
+            $(f.t).textContent = pad(v);
+            $(f.b).textContent = pad(v);
+            document.querySelectorAll('.pbtn').forEach((b) => b.classList.remove('on'));
+            if (!RUN) {
+              total = 0;
+              initTotal = 0;
+            }
+            if (String(el.value).length >= 2 && f.nx) $(f.nx).focus();
+          });
+          el.addEventListener('keydown', (e) => {
+            if (MODE !== 'cd') {
+              e.preventDefault();
+              return;
+            }
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (f.nx) $(f.nx).focus();
+              else {
+                el.blur();
+                toggleTimer();
+              }
+            }
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              if (f.nx) $(f.nx).focus();
+            }
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              let v = Math.min(f.max, (parseInt(el.value) || 0) + 1);
+              el.value = v;
+              el.dispatchEvent(new Event('input'));
+            }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              let v = Math.max(0, (parseInt(el.value) || 0) - 1);
+              el.value = v;
+              el.dispatchEvent(new Event('input'));
+            }
+          });
+        });
+        $('subjectInp').addEventListener('keydown', (e) => e.stopPropagation());
+        $('subjectInp').addEventListener(
+          'focus',
+          () => ($('subjectInp').style.userSelect = 'text'),
+        );
+      }
+
+      /* SESSIONS */
+      function saveSession(dur, partial, modeType) {
+        dur = ~~dur;
+        if (!dur || dur < 5) return;
+        const dateKey = sessionStartTehranDate || getTehranDate();
+        const subj = getSubject();
+        history.push({
+          id: 's' + Date.now() + Math.random().toString(36).slice(2, 6),
+          date: dateKey,
+          duration: dur,
+          partial: !!partial,
+          mode: modeType || 'cd',
+          time: getTehranTime(sessionStart ? new Date(sessionStart) : new Date()),
+          subject: subj || '',
+        });
+        saveHist();
+        updUI();
+      }
+      function todaySec() {
+        const k = getTehranDate();
+        return history.filter((s) => s.date === k).reduce((a, s) => a + (s.duration || 0), 0);
+      }
+      function savePartial() {
+        if (partialSaved) return;
+        let studied = 0;
+        if (MODE === 'cd') {
+          studied = initTotal - total + (RUN ? ~~((performance.now() - startMs) / 1000) : 0);
+          studied = Math.min(studied, initTotal);
+        } else {
+          studied = elapsed + (RUN ? ~~((performance.now() - startMs) / 1000) : 0);
+        }
+        if (studied >= 5) {
+          saveSession(studied, true, MODE);
+          partialSaved = true;
+        }
+      }
+
+      /* DELETE */
+      const _delConfirm = {};
+      function deleteSession(id) {
+        const btn = document.querySelector(`[data-del="${id}"]`);
+        if (!btn) return;
+        if (_delConfirm[id]) {
+          clearTimeout(_delConfirm[id]);
+          delete _delConfirm[id];
+          history = history.filter((s) => s.id !== id);
+          saveHist();
+          renderHist(histTab);
+          toast('جلسه حذف شد');
+        } else {
+          btn.classList.add('confirm');
+          btn.textContent = '؟';
+          _delConfirm[id] = setTimeout(() => {
+            delete _delConfirm[id];
+            if (document.querySelector(`[data-del="${id}"]`)) {
+              document.querySelector(`[data-del="${id}"]`).classList.remove('confirm');
+              document.querySelector(`[data-del="${id}"]`).textContent = '🗑';
+            }
+          }, 2500);
+        }
+      }
+
+      window.addEventListener('beforeunload', () => {
+        stopAlarm();
+        savePartial();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') savePartial();
+      });
+      window.addEventListener('pagehide', () => {
+        stopAlarm();
+        savePartial();
+      });
+
+      /* HISTORY */
+      let histTab = 0;
+      function openHist() {
+        renderHist(0);
+        $('histPanel').classList.add('open');
+      }
+      function closeHist() {
+        $('histPanel').classList.remove('open');
+      }
+      function renderHist(tab) {
+        histTab = tab;
+        const todK = getTehranDate(),
+          now = new Date();
+        let filtered = [];
+        if (tab === 0) filtered = history.filter((s) => s.date === todK);
+        else if (tab === 1) {
+          const keys = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            keys.push(getTehranDate(d));
+          }
+          filtered = history.filter((s) => keys.includes(s.date));
+        } else if (tab === 2) {
+          const mp = todK.slice(0, 7);
+          filtered = history.filter((s) => s.date.startsWith(mp));
+        } else {
+          const yr = todK.slice(0, 4);
+          filtered = history.filter((s) => s.date.startsWith(yr));
+        }
+        const totSec = filtered.reduce((a, s) => a + (s.duration || 0), 0),
+          totMin = ~~(totSec / 60),
+          totH = ~~(totMin / 60),
+          remMin = totMin % 60;
+        const avg = filtered.length ? ~~(totMin / filtered.length) : 0;
+        const tStr = totH > 0 ? `${toFa(totH)}س ${toFa(remMin)}` : toFa(totMin);
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const key = getTehranDate(d);
+          const dayNum = new Intl.DateTimeFormat('fa-IR', {
+            timeZone: 'Asia/Tehran',
+            day: 'numeric',
+          }).format(d);
+          days.push({ key, lbl: dayNum });
+        }
+        const byDay = {};
+        filtered.forEach((s) => {
+          byDay[s.date] = (byDay[s.date] || 0) + s.duration;
+        });
+        const mx = Math.max(...days.map((d) => byDay[d.key] || 0), 1);
+        const barsHtml = days
+          .map(
+            (d) =>
+              `<div class="hbarcol"><div class="hbarfill${d.key === todK ? ' today' : ''}" style="height:${~~(((byDay[d.key] || 0) / mx) * 100)}%"></div><div class="hbarlbl">${d.lbl}</div></div>`,
+          )
+          .join('');
+        const ptabs = ['روزانه', 'هفتگی', 'ماهانه', 'سالانه']
+          .map(
+            (l, i) =>
+              `<button class="hpb${i === tab ? ' on' : ''}" onclick="renderHist(${i})">${l}</button>`,
+          )
+          .join('');
+        let sessHtml = '';
+        if (!filtered.length) sessHtml = '<div class="hempty">📭<br>هنوز جلسه‌ای ثبت نشده</div>';
+        else {
+          const grp = {};
+          filtered.forEach((s) => {
+            (grp[s.date] = grp[s.date] || []).push(s);
+          });
+          sessHtml = Object.keys(grp)
+            .sort()
+            .reverse()
+            .map((date) => {
+              const ds = grp[date],
+                dm = ~~(ds.reduce((a, s) => a + (s.duration || 0), 0) / 60),
+                dh = ~~(dm / 60),
+                dr = dm % 60;
+              const dStr = dh > 0 ? `${toFa(dh)}ساعت ${toFa(dr)}دقیقه` : `${toFa(dm)} دقیقه`;
+              const dLabel = new Intl.DateTimeFormat('fa-IR', {
+                timeZone: 'Asia/Tehran',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              }).format(new Date(date + 'T12:00:00'));
+              const rows =
+                tab >= 2
+                  ? ds
+                      .map((s) => {
+                        const m2 = ~~((s.duration || 0) / 60);
+                        const pt = s.partial ? '<span class="ptag">نیمه‌کاره</span>' : '';
+                        const sw = s.mode === 'sw' ? '<span class="swtag">⏲کرونومتر</span>' : '';
+                        const sb = s.subject ? `<span class="subjtag">📚${s.subject}</span>` : '';
+                        return `<div class="hsessrow"><div class="sess-left"><button class="del-sess-btn" data-del="${s.id}" onclick="deleteSession('${s.id}')">🗑</button><span>${s.time || '--:--'}</span></div><div class="sess-mid">${pt}${sw}${sb}</div><div class="sess-right"><span class="hdur">${toFa(m2)} دق</span></div></div>`;
+                      })
+                      .join('')
+                  : ds
+                      .map((s) => {
+                        const m2 = ~~((s.duration || 0) / 60);
+                        const pt = s.partial ? '<span class="ptag">نیمه‌کاره</span>' : '';
+                        const sw = s.mode === 'sw' ? '<span class="swtag">⏲کرونومتر</span>' : '';
+                        const sb = s.subject ? `<span class="subjtag">📚${s.subject}</span>` : '';
+                        return `<div class="hsessrow"><div class="sess-left"><button class="del-sess-btn" data-del="${s.id}" onclick="deleteSession('${s.id}')">🗑</button><span>${s.time || '--:--'}</span></div><div class="sess-mid">${pt}${sw}${sb}</div><div class="sess-right"><span class="hdur">${toFa(m2)} دقیقه</span></div></div>`;
+                      })
+                      .join('');
+              return `<div class="hday"><div class="hdayhead"><span class="hdaydate">${dLabel}</span><span class="hdaytotal">${dStr}</span></div>${rows}</div>`;
+            })
+            .join('');
+        }
+        $('histBody').innerHTML =
+          `<div class="hperiod">${ptabs}</div><div class="hstats"><div class="hstat"><div class="hsv">${tStr}</div><div class="hsl">دقیقه</div></div><div class="hstat"><div class="hsv">${toFa(filtered.length)}</div><div class="hsl">جلسه</div></div><div class="hstat"><div class="hsv">${toFa(avg)}</div><div class="hsl">میانگین</div></div></div>` +
+          (tab > 0
+            ? `<div class="hbarswrap"><div class="hbarstitle">نمودار ۷ روز</div><div class="hbars">${barsHtml}</div></div>`
+            : '') +
+          sessHtml +
+          `<button class="hclear" id="clrBtn" onclick="clearHist()">🗑️ پاک کردن همه تاریخچه</button>`;
+      }
+      function clearHist() {
+        const btn = $('clrBtn');
+        if (btn.dataset.c === '1') {
+          history = [];
+          saveHist();
+          renderHist(histTab);
+          toast('تاریخچه پاک شد');
+        } else {
+          btn.textContent = '⚠️ مطمئنید؟ دوباره بزنید';
+          btn.dataset.c = '1';
+          setTimeout(() => {
+            if ($('clrBtn')) {
+              $('clrBtn').textContent = '🗑️ پاک کردن همه تاریخچه';
+              delete $('clrBtn').dataset.c;
+            }
+          }, 3000);
+        }
+      }
+
+      /* KEYBOARD */
+      document.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          toggleTimer();
+        } else if (e.code === 'KeyR') resetTimer();
+        else if (e.code === 'KeyL') addLap();
+        else if (e.code === 'Escape') {
+          closeTheme();
+          closeHist();
+          closeCel();
+        } else if (!RUN && MODE === 'cd') {
+          if (e.code === 'Digit1') setPreset(25);
+          else if (e.code === 'Digit2') setPreset(45);
+          else if (e.code === 'Digit3') setPreset(60);
+          else if (e.code === 'Digit4') setPreset(90);
+        }
+      });
+
+      /* INIT */
+      window.addEventListener('load', () => {
+        applyTheme(ACT);
+        setupInputs();
+        setStatus('idle');
+        forceDispZero();
+        updUI();
+      });
+    </script>
+  </body>
+</html>

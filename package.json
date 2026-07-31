@@ -1,0 +1,48 @@
+{
+  "name": "focusflow-flip",
+  "version": "1.0.0",
+  "main": "main.js",
+  "type": "commonjs",
+  "description": "FocusFlow Flip Clock",
+  "homepage": "https://example.com",
+  "author": {
+    "name": "Armin Abdi",
+    "email": "arminabdijs@gmail.com"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.focusflowFlip.app",
+    "productName": "FocusFlowFlip",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "category": "Utility",
+      "maintainer": "Armin Abdi <arminabdijs@gmail.com>",
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  }
+}
